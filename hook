@@ -221,18 +221,21 @@ update_target() {
   local tgt=$(relpath "$1")
   local files=$(find "$(srcpath "$1")" -type f 2>/dev/null | wc -l)
   (
-    cd "$SMAKEDIR"
+    cd "$SMAKEDIR" || return 1
+    # 使用 flock 锁定 .targets 文件
+    exec 200>"$SMAKEDIR/.targets.lock"
+    flock -x 200 || return 1
+
     if [ ${files:-0} -gt 0 ]; then
-      {
-        cat .targets 2>/dev/null
-        echo "$tgt"
-      } | sort | uniq >.targets.tmp &&
-        mv -f .targets.tmp .targets
+      # 添加目标（去重）
+      { cat .targets 2>/dev/null; echo "$tgt"; } | sort | uniq >.targets.tmp
     else
-      # remove from target list if no files exist
-      grep -v "^$tgt$" .targets >.targets.tmp &&
-        mv -f .targets.tmp .targets
+      # 移除目标
+      grep -v "^$tgt$" .targets >.targets.tmp
     fi
+    # 原子替换
+    mv -f .targets.tmp .targets
+    flock -u 200
   )
 }
 
