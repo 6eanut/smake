@@ -114,7 +114,7 @@ banner:
 	@\$(ANALYZE) | sed -ne '1,/^\$\$/p'
 
 \$(TGTS):
-	\$(ANALYZE) \$(SPARROW_OPTS) \$(OPTS) -report=\$@ \$(@:%.$SMAKEDIRpath=%)/* \$(REDIRECTION)
+	\$(ANALYZE) \$(SPARROW_OPTS) \$(OPTS) \$(@:%.$SMAKEDIRpath=%)/* \$(REDIRECTION)
 
 targets:
 	@echo "Following <target>s are ready to be analyzed:"
